@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Моя коллекция жижек</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #000000;
+    --panel: #0a0a0a;
+    --panel-2: #141414;
+    --border: #2a2a2a;
+    --text: #e0e0e0;
+    --muted: #7a7a7a;
+    --accent: #8a0303;
+    --accent-hover: #b30505;
+    --danger: #ff2a2a;
+    --star: #d4af37;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* --- ФОНОВЫЕ КАРТИНКИ (ДЕКОР) --- */
+  .decor-img {
+    position: fixed;
+    pointer-events: none;
+    filter: grayscale(100%) contrast(150%);
+    z-index: -1;
+    opacity: 0.15;
+  }
+  
+  .bg-center {
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60vw; max-width: 800px;
+    opacity: 0.08;
+  }
+  
+  .decor-tl {
+    top: -5%; left: -5%;
+    width: 350px; height: 350px;
+    object-fit: contain;
+    opacity: 0.2;
+    transform: rotate(-15deg);
+  }
+
+  .decor-br {
+    bottom: -5%; right: -5%;
+    width: 400px; height: 400px;
+    object-fit: contain;
+    opacity: 0.2;
+    transform: rotate(15deg);
+  }
+
+  /* --- ЛЕПЕСТКИ САКУРЫ --- */
+  #sakura-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1; /* Поднял повыше, чтобы точно были видны */
+    overflow: hidden;
+  }
+  
+  .petal {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(255,183,197,0.9), rgba(255,105,140,0.6));
+    border-radius: 15px 0 15px 0;
+    box-shadow: 0 0 10px rgba(255,105,140,0.5);
+    animation: fall linear infinite;
+  }
+
+  /* Анимация: летят слева направо с легким покачиванием */
+  @keyframes fall {
+    0% {
+      transform: translate(0, 0) rotate(0deg) rotateX(0deg) rotateY(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(110vw, 40vh) rotate(1080deg) rotateX(360deg) rotateY(180deg);
+      opacity: 0;
+    }
+  }
+
+  /* --- ОСНОВНОЙ ИНТЕРФЕЙС --- */
+  .topbar, .controls, .grid {
+    position: relative;
+    z-index: 10;
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 30px 24px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent);
+  }
+  
+  h1, h2, h3, .card-title { font-family: 'Cinzel', serif; letter-spacing: 1px; }
+  .topbar h1 { font-size: 26px; margin: 0; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+  .cross-icon { color: var(--muted); margin-right: 8px; font-family: sans-serif; }
+  
+  .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .controls {
+    display: flex; gap: 12px; padding: 20px 24px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .controls input, .controls select {
+    background: rgba(10, 10, 10, 0.9); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px;
+    border-radius: var(--radius); font-size: 14px; outline: none;
+    font-family: 'Montserrat', sans-serif;
+    backdrop-filter: blur(5px);
+  }
+  .controls input:focus, .controls select:focus { border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+  .controls input[type="search"] { flex: 1; min-width: 220px; }
+  .count { color: var(--muted); font-size: 13px; margin-left: auto; text-transform: uppercase; letter-spacing: 1px; }
+
+  .btn {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); padding: 10px 16px;
+    border-radius: var(--radius); cursor: pointer; font-size: 13px;
+    font-family: 'Montserrat', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+    transition: 0.2s;
+  }
+  .btn:hover { background: #222; border-color: #555; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); box-shadow: 0 0 15px rgba(138,3,3,0.5); }
+  .btn.small { padding: 6px 10px; font-size: 11px; }
+  .btn.danger { color: var(--danger); border-color: transparent; }
+  .btn.danger:hover { background: rgba(255,42,42,0.1); border-color: var(--danger); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px; padding: 0 24px 40px;
+  }
+  
+  .card {
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: 0.3s;
+    position: relative;
+  }
+  .card::before {
+    content: '✞';
+    position: absolute; top: 10px; right: 12px;
+    color: rgba(255,255,255,0.3); font-size: 18px; z-index: 10;
+    font-family: sans-serif;
+  }
+  .card:hover { border-color: #555; box-shadow: 0 0 25px rgba(0,0,0,0.9); transform: translateY(-4px); }
+  
+  .card-photo {
+    width: 100%; height: 200px; object-fit: cover;
+    background: #050505; display: block;
+    border-bottom: 1px solid var(--border);
+    filter: grayscale(20%) contrast(110%);
+  }
+  .card-photo.placeholder {
+    display: grid; place-items: center;
+    font-size: 46px; color: var(--muted); opacity: 0.3;
+  }
+  
+  .card-body {
+    padding: 18px; display: flex; flex-direction: column;
+    gap: 10px; flex: 1;
+  }
+  .card-title { margin: 0; font-size: 18px; color: #fff; }
+  .card-brand { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+  
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+  .badge {
+    background: transparent; border: 1px solid var(--border);
+    padding: 3px 8px; border-radius: var(--radius);
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+  }
+  
+  .card-flavor { font-size: 14px; font-style: italic; color: #ccc; }
+  .card-notes { font-size: 12px; color: var(--muted); border-left: 2px solid var(--border); padding-left: 10px; margin-top: 5px; }
+
+  .rating-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+    border-top: 1px dashed var(--border); padding-top: 8px;
+  }
+  .stars { letter-spacing: 2px; }
+  .star { color: #222; font-size: 16px; }
+  .star.on { color: var(--star); text-shadow: 0 0 8px rgba(212,175,55,0.4); }
+
+  .card-actions {
+    display: flex; gap: 6px; margin-top: auto; padding-top: 12px;
+  }
+  .empty {
+    grid-column: 1 / -1; text-align: center;
+    padding: 80px 20px; color: var(--muted);
+    font-family: 'Cinzel', serif; font-size: 20px;
+    border: 1px dashed var(--border);
+    background: rgba(0,0,0,0.5);
+  }
+
+  dialog {
+    background: var(--panel); color: var(--text);
+    border: 1px solid #333; border-radius: var(--radius);
+    padding: 0; width: min(520px, 92vw); max-height: 90vh;
+    box-shadow: 0 0 50px rgba(0,0,0,0.9);
+  }
+  dialog::backdrop {
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px);
+  }
+  #form { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+  #form h2 { margin: 0 0 10px; font-size: 22px; text-align: center; color: #fff; }
+  #form label {
+    display: flex; flex-direction: column;
+    gap: 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+  }
+  #form input, #form textarea {
+    background: #050505; border: 1px solid var(--border);
+    color: var(--text); padding: 12px;
+    border-radius: var(--radius); font-size: 14px;
+    font-family: 'Montserrat', sans-serif; outline: none;
+  }
+  #form input:focus, #form textarea:focus { border-color: #666; }
+  #form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .preview img {
+    max-width: 100%; max-height: 140px;
+    border: 1px solid var(--border); display: block;
+    filter: grayscale(20%);
+  }
+  
+  .star-input { display: flex; gap: 4px; }
+  .star-input .star {
+    background: none; border: none; cursor: pointer;
+    font-size: 28px; padding: 0 2px; line-height: 1;
+    transition: transform 0.1s, color 0.2s;
+    color: #222;
+  }
+  .star-input .star:hover { transform: scale(1.2); color: #555; }
+  .star-input .star.on { color: var(--star); text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+  
+  .actions {
+    display: flex; justify-content: flex-end;
+    gap: 12px; margin-top: 15px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ФОНОВЫЕ КАРТИНКИ -->
+<img src="bg.png" class="decor-img bg-center" alt="">
+<img src="decor1.png" class="decor-img decor-tl" alt="">
+<img src="decor2.png" class="decor-img decor-br" alt="">
+
+<!-- Контейнер для лепестков -->
+<div id="sakura-container"></div>
+
+<header class="topbar">
+  <h1><span class="cross-icon">✞</span>Моя коллекция жижек<span class="cross-icon">✞</span></h1>
+  <div class="top-actions">
+    <button class="btn small" id="exportBtn" title="Скачать JSON-бэкап">Экспорт</button>
+    <button class="btn small" id="importBtn" title="Загрузить JSON-бэкап">Импорт</button>
+    <input type="file" id="importInput" accept="application/json" hidden>
+    <button class="btn primary" id="addBtn">+ Добавить</button>
+  </div>
+</header>
+
+<div class="controls">
+  <input type="search" id="search" placeholder="Поиск по названию, бренду или вкусу...">
+  <select id="sort">
+    <option value="new">Сначала новые</option>
+    <option value="name">По названию</option>
+    <option value="strength">По крепости</option>
+    <option value="flavor">По оценке вкуса</option>
+  </select>
+  <span class="count" id="count"></span>
+</div>
+
+<main id="grid" class="grid"></main>
+
+<dialog id="dialog">
+  <form id="form" method="dialog">
+    <h2 id="formTitle">Новая жижка</h2>
+    <label>Название *
+      <input name="name" required maxlength="80" placeholder="напр. Jam Monster Strawberry">
+    </label>
+    <label>Бренд
+      <input name="brand" maxlength="60" placeholder="напр. Jam Monster">
+    </label>
+    <div class="row">
+      <label>Крепость (мг/мл)
+        <input name="strength" type="number" min="0" step="1" placeholder="3">
+      </label>
+      <label>Объём (мл)
+        <input name="volume" type="number" min="0" step="1" placeholder="60">
+      </label>
+    </div>
+    <label>Вкус (описание)
+      <input name="flavor" maxlength="120" placeholder="напр. клубника + тост">
+    </label>
+    <label>Фото
+      <input name="photo" type="file" accept="image/*" id="photoInput">
+    </label>
+    <div class="preview"><img id="preview" alt=""></div>
+    <label>Ощущение крепости (0–5)
+      <div class="star-input" data-field="strengthRating"></div>
+    </label>
+    <label>Оценка вкуса (0–5)
+      <div class="star-input" data-field="flavorRating"></div>
+    </label>
+    <label>Заметки
+      <textarea name="notes" rows="2" maxlength="300" placeholder="что-то важное про эту жижку"></textarea>
+    </label>
+    <div class="actions">
+      <button type="button" class="btn" id="cancelBtn">Отмена</button>
+      <button type="submit" class="btn primary">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ============================================================
+   1. УТИЛИТЫ
+   ============================================================ */
+const $  = (sel) => document.querySelector(sel);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[c]));
+
+/* ============================================================
+   2. ГЕНЕРАЦИЯ ЛЕПЕСТКОВ (ЛЕТЯТ СЛЕВА НАПРАВО)
+   ============================================================ */
+function createSakura() {
+  const container = $('#sakura-container');
+  const petalCount = 120; // Много лепестков (было 40)
+
+  for (let i = 0; i < petalCount; i++) {
+    const petal = document.createElement('div');
+    petal.classList.add('petal');
+    
+    const size = Math.random() * 12 + 8; // Размер от 8 до 20 пикселей
+    
+    // СТАРТ: По всей левой стороне экрана (за левым краем)
+    const startX = Math.random() * 20 - 20; // от -20% до 0%
+    const startY = Math.random() * 100;     // от 0% до 100% высоты
+    
+    // Скорость: очень медленно (от 25 до 50 секунд)
+    const duration = Math.random() * 25 + 25; 
+    const delay = Math.random() * 40; // Задержка до 40 секунд
+
+    petal.style.width = `${size}px`;
+    petal.style.height = `${size}px`;
+    petal.style.left = `${startX}vw`;
+    petal.style.top = `${startY}vh`;
+    petal.style.animationDuration = `${duration}s`;
+    petal.style.animationDelay = `-${delay}s`;
+
+    container.appendChild(petal);
+  }
+}
+createSakura();
+
+/* ============================================================
+   3. ХРАНИЛИЩЕ
+   ============================================================ */
+const STORAGE_KEY = 'liquids_v1';
+let liquids = loadFromStorage();
+
+function loadFromStorage() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } 
+  catch { return []; }
+}
+
+function saveToStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(liquids)); } 
+  catch (e) { alert('Не удалось сохранить. Мало места.'); console.error(e); }
+}
+
+function compressImage(file, maxSide = 400, quality = 0.7) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.readAsDataURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+  });
+}
+
+/* ============================================================
+   4. ЗВЁЗДЫ
+   ============================================================ */
+function starsHTML(value, interactive = false) {
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    const filled = i <= value ? 'on' : '';
+    if (interactive) {
+      html += `<button type="button" class="star ${filled}" data-v="${i}">★</button>`;
+    } else {
+      html += `<span class="star ${filled}">★</span>`;
+    }
+  }
+  return html;
+}
+
+function initStarInput(container, value = 0) {
+  container.dataset.value = value;
+  container.innerHTML = starsHTML(value, true);
+  container.onclick = (e) => {
+    const btn = e.target.closest('.star');
+    if (!btn) return;
+    let v = Number(btn.dataset.v);
+    if (v === Number(container.dataset.value)) v = 0;
+    container.dataset.value = v;
+    container.innerHTML = starsHTML(v, true);
+  };
+}
+
+/* ============================================================
+   5. РЕНДЕР
+   ============================================================ */
+const grid = $('#grid');
+const searchInput = $('#search');
+const sortSelect  = $('#sort');
+const countEl     = $('#count');
+
+function getVisibleList() {
+  const q = searchInput.value.trim().toLowerCase();
+  let list = liquids.filter(l =>
+    !q || (l.name + ' ' + (l.brand || '') + ' ' + (l.flavor || '')).toLowerCase().includes(q)
+  );
+  const sort = sortSelect.value;
+  if (sort === 'new')      list.sort((a, b) => b.createdAt - a.createdAt);
+  if (sort === 'name')     list.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  if (sort === 'strength') list.sort((a, b) => (b.strength || 0) - (a.strength || 0));
+  if (sort === 'flavor')   list.sort((a, b) => (b.flavorRating || 0) - (a.flavorRating || 0));
+  return list;
+}
+
+function render() {
+  const list = getVisibleList();
+  countEl.textContent = list.length === liquids.length ? `${liquids.length} шт.` : `${list.length} из ${liquids.length}`;
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty">Пока пусто. <br><br> Нажми «+ Добавить», чтобы начать свою коллекцию.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(cardHTML).join('');
+}
+
+function cardHTML(l) {
+  const photo = l.photo
+    ? `<img class="card-photo" src="${l.photo}" alt="">`
+    : `<div class="card-photo placeholder">✞</div>`;
+  return `
+    <article class="card" data-id="${l.id}">
+      ${photo}
+      <div class="card-body">
+        <h3 class="card-title">${esc(l.name)}</h3>
+        ${l.brand ? `<div class="card-brand">${esc(l.brand)}</div>` : ''}
+        <div class="badges">
+          ${l.strength != null ? `<span class="badge">${l.strength} мг/мл</span>` : ''}
+          ${l.volume   ? `<span class="badge">${l.volume} мл</span>` : ''}
+        </div>
+        ${l.flavor ? `<div class="card-flavor">${esc(l.flavor)}</div>` : ''}
+        <div class="rating-row">
+          <span>Крепость</span>
+          <span class="stars">${starsHTML(l.strengthRating || 0)}</span>
+        </div>
+        <div class="rating-row">
+          <span>Вкус</span>
+          <span class="stars">${starsHTML(l.flavorRating || 0)}</span>
+        </div>
+        ${l.notes ? `<div class="card-notes">${esc(l.notes)}</div>` : ''}
+        <div class="card-actions">
+          <button class="btn small edit">Изменить</button>
+          <button class="btn small danger delete">Удалить</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+/* ============================================================
+   6. СОБЫТИЯ
+   ============================================================ */
+grid.addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const id = card.dataset.id;
+
+  if (e.target.closest('.edit')) {
+    const item = liquids.find(l => l.id === id);
+    if (item) openForm(item);
+  }
+  if (e.target.closest('.delete')) {
+    if (!confirm('Удалить эту жижку?')) return;
+    liquids = liquids.filter(l => l.id !== id);
+    saveToStorage();
+    render();
+  }
+});
+
+const dialog      = $('#dialog');
+const form        = $('#form');
+const formTitle   = $('#formTitle');
+const photoInput  = $('#photoInput');
+const preview     = $('#preview');
+const strengthStars = $('#form .star-input[data-field="strengthRating"]');
+const flavorStars   = $('#form .star-input[data-field="flavorRating"]');
+const field = (n) => form.elements.namedItem(n);
+
+let editingId = null;
+let currentPhoto = null;
+
+function openForm(liquid = null) {
+  editingId = liquid?.id || null;
+  formTitle.textContent = liquid ? 'Редактировать' : 'Новая жижка';
+  form.reset();
+  currentPhoto = liquid?.photo || null;
+  preview.src = currentPhoto || '';
+  preview.style.display = currentPhoto ? 'block' : 'none';
+  field('name').value     = liquid?.name     ?? '';
+  field('brand').value    = liquid?.brand    ?? '';
+  field('strength').value = liquid?.strength ?? '';
+  field('volume').value   = liquid?.volume   ?? '';
+  field('flavor').value   = liquid?.flavor   ?? '';
+  field('notes').value    = liquid?.notes    ?? '';
+  initStarInput(strengthStars, liquid?.strengthRating || 0);
+  initStarInput(flavorStars,   liquid?.flavorRating   || 0);
+  dialog.showModal();
+}
+
+$('#addBtn').onclick    = () => openForm();
+$('#cancelBtn').onclick = () => dialog.close();
+
+photoInput.onchange = async () => {
+  const file = photoInput.files[0];
+  if (!file) return;
+  currentPhoto = await compressImage(file);
+  preview.src = currentPhoto;
+  preview.style.display = 'block';
+};
+
+form.onsubmit = (e) => {
+  e.preventDefault();
+  const item = {
+    id: editingId || uid(),
+    name:  field('name').value.trim(),
+    brand: field('brand').value.trim(),
+    strength: field('strength').value ? Number(field('strength').value) : null,
+    volume:   field('volume').value   ? Number(field('volume').value)   : null,
+    flavor: field('flavor').value.trim(),
+    notes:  field('notes').value.trim(),
+    photo: currentPhoto,
+    strengthRating: Number(strengthStars.dataset.value) || 0,
+    flavorRating:   Number(flavorStars.dataset.value)   || 0,
+    createdAt: editingId ? liquids.find(l => l.id === editingId).createdAt : Date.now(),
+  };
+  if (editingId) {
+    const i = liquids.findIndex(l => l.id === editingId);
+    liquids[i] = item;
+  } else {
+    liquids.push(item);
+  }
+  saveToStorage();
+  render();
+  dialog.close();
+};
+
+$('#exportBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(liquids, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `liquids-backup.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+$('#importBtn').onclick = () => $('#importInput').click();
+
+$('#importInput').onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data)) throw new Error('неверный формат');
+    if (!confirm(`Импортировать ${data.length} записей? Текущие данные будут заменены.`)) return;
+    liquids = data;
+    saveToStorage();
+    render();
+  } catch (err) {
+    alert('Ошибка: ' + err.message);
+  } finally {
+    e.target.value = '';
+  }
+};
+
+render();
+searchInput.oninput = render;
+sortSelect.onchange = render;
+</script>
+</body>
+</html>
